@@ -2,10 +2,8 @@ import {
   AddSubmittersReq,
   CreateStudyReq,
   RemoveSubmitterReq,
-  SongStudy,
   Study,
-  EgoStudyGroup,
-} from '../common/types';
+} from "../common/types";
 import {
   FailedToRemoveSubmitterFromStudy,
   FailedToCreateStudy,
@@ -15,8 +13,8 @@ import {
   StudyAlreadyExists,
   SubmittersAlreadyInStudy,
   SubmitterNotInStudy,
-} from '../common/errors';
-import { createSongStudy, getSongStudies, getSongStudyIds } from './song';
+} from "../common/errors";
+import { createSongStudy, getSongStudies, getSongStudyIds } from "./song";
 import {
   getEgoStudyGroups,
   getEgoStudyUsers,
@@ -29,35 +27,47 @@ import {
   addGroupToPolicyWithWriteMask,
   getEgoStudyGroupUsers,
   getEgoUserGroups,
-} from './ego';
+} from "./ego";
 
-export const getStudies = async (): Promise<Study[]> => {
-  const { studyIds, studyDetails } = await getSongStudies();
+export const getStudies = async (songId?: string): Promise<Study[]> => {
+  const studyDetails = await getSongStudies(songId);
 
-  const { studyGroups, studyIdsMissingGroups } = await getEgoStudyGroups(studyIds);
-  console.error("These SONG study IDs don't have ego groups: ", studyIdsMissingGroups);
+  const { studyGroups, studyIdsMissingGroups } = await getEgoStudyGroups(
+    studyDetails
+  );
+  console.error(
+    "These SONG study IDs don't have ego groups: ",
+    studyIdsMissingGroups
+  );
   console.debug(studyGroups);
 
-  const studyUsers: Record<string, string[]> = await getEgoStudyUsers(studyGroups);
-
-  return (
-    studyDetails
-      // studyUsers can be empty array but should not undefined
-      .filter((sd) => studyUsers[sd.studyId] !== undefined)
-      .map((sd: SongStudy) => {
-        return {
-          studyId: sd.studyId,
-          name: sd.name,
-          description: sd.description,
-          organization: sd.organization,
-          submitters: studyUsers[sd.studyId],
-        };
-      })
+  const studyUsers: Record<string, string[]> = await getEgoStudyUsers(
+    studyGroups
   );
+
+  return studyGroups
+    .map((sg) => {
+      const studyDetail = studyDetails.find(
+        (sd) => sd.studyId === sg.studyId && sd.songId === sg.songId
+      );
+      if (!studyDetail) {
+        return null;
+      }
+
+      return {
+        description: studyDetail.description,
+        name: studyDetail.name,
+        organization: studyDetail.organization,
+        songId: studyDetail.songId,
+        studyId: studyDetail.studyId,
+        submitters: studyUsers[studyDetail.studyId] || [],
+      };
+    })
+    .filter((study) => study !== null);
 };
 
 export const createStudy = async (req: CreateStudyReq): Promise<Study> => {
-  const existingSongIds = await getSongStudyIds();
+  const existingSongIds = await getSongStudyIds(req.songId);
   if (existingSongIds.includes(req.studyId)) {
     throw StudyAlreadyExists(req.studyId);
   }
@@ -68,13 +78,17 @@ export const createStudy = async (req: CreateStudyReq): Promise<Study> => {
     throw FailedToCreateStudy(req.studyId);
   }
 
-  const groupId = await createEgoStudyGroup(req.studyId, req.description);
+  const groupId = await createEgoStudyGroup(
+    req.songId,
+    req.studyId,
+    req.description
+  );
   if (!groupId) {
     console.error(`Failed to create study group in EGO`, JSON.stringify(req));
     throw FailedToCreateStudy(req.studyId);
   }
 
-  const policyId = await createEgoStudyPolicy(req.studyId);
+  const policyId = await createEgoStudyPolicy(req.songId, req.studyId);
   if (!policyId) {
     console.error(`Failed to create study policy in EGO`, JSON.stringify(req));
     throw FailedToCreateStudy(req.studyId);
@@ -82,7 +96,10 @@ export const createStudy = async (req: CreateStudyReq): Promise<Study> => {
 
   const added = await addGroupToPolicyWithWriteMask(groupId, policyId);
   if (!added) {
-    console.error(`Failed to add study group to study policy in EGO`, JSON.stringify(req));
+    console.error(
+      `Failed to add study group to study policy in EGO`,
+      JSON.stringify(req)
+    );
     throw FailedToCreateStudy(req.studyId);
   }
 
@@ -93,14 +110,16 @@ export const createStudy = async (req: CreateStudyReq): Promise<Study> => {
 };
 
 export const addSubmittersToStudy = async (req: AddSubmittersReq) => {
-  const egoGroup = await getEgoStudyGroup(req.studyId);
+  const egoGroup = await getEgoStudyGroup(req.songId, req.studyId);
   if (!egoGroup) {
     throw StudyNotFound(req.studyId);
   }
 
   const groupUsers = await getEgoStudyGroupUsers(egoGroup.id);
   const groupUserEmails = groupUsers.map((u) => u.email);
-  const existingGroupUsers = req.submitters.filter((u) => groupUserEmails.includes(u));
+  const existingGroupUsers = req.submitters.filter((u) =>
+    groupUserEmails.includes(u)
+  );
   if (existingGroupUsers.length > 0) {
     throw SubmittersAlreadyInStudy(req.studyId, existingGroupUsers);
   }
@@ -128,7 +147,7 @@ export const addSubmittersToStudy = async (req: AddSubmittersReq) => {
 };
 
 export const removeSubmitterFromStudy = async (req: RemoveSubmitterReq) => {
-  const egoGroup = await getEgoStudyGroup(req.studyId);
+  const egoGroup = await getEgoStudyGroup(req.songId, req.studyId);
   if (!egoGroup) {
     throw StudyNotFound(req.studyId);
   }
@@ -144,7 +163,10 @@ export const removeSubmitterFromStudy = async (req: RemoveSubmitterReq) => {
     throw SubmitterNotInStudy(req.studyId, req.submitter);
   }
 
-  const successfullyRemoved = await removeUserFromGroup(egoGroup.id, egoUser.id);
+  const successfullyRemoved = await removeUserFromGroup(
+    egoGroup.id,
+    egoUser.id
+  );
   if (!successfullyRemoved) {
     throw FailedToRemoveSubmitterFromStudy(req.studyId, req.submitter);
   }

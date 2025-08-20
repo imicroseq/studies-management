@@ -6,13 +6,17 @@
   },
   "security": [
     {
-      "bearerAuth": ["STUDY-${programId}.WRITE"]
+      "bearerAuth": [
+        "STUDY-${programId}.WRITE"
+      ]
     }
   ],
   "paths": {
     "/health": {
       "get": {
-        "tags": ["Health"],
+        "tags": [
+          "Health"
+        ],
         "summary": "get status of app",
         "responses": {
           "200": {
@@ -33,7 +37,18 @@
     },
     "/studies": {
       "get": {
-        "tags": ["Studies"],
+        "tags": [
+          "Studies"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "songId",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "summary": "Get all valid studies from song and their users from ego",
         "responses": {
           "200": {
@@ -42,14 +57,16 @@
         }
       },
       "post": {
-        "tags": ["Studies"],
+        "tags": [
+          "Studies"
+        ],
         "summary": "Create new study in song and related entities in ego",
         "description": "Create study in song, study group in ego and study policy in ego",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreaetStudyReq"
+                "$ref": "#/components/schemas/CreateStudyReq"
               }
             }
           }
@@ -79,7 +96,9 @@
     },
     "/studies/submitters": {
       "post": {
-        "tags": ["Studies"],
+        "tags": [
+          "Studies"
+        ],
         "summary": "Add submitters to an existing study's group",
         "requestBody": {
           "content": {
@@ -116,7 +135,9 @@
         }
       },
       "delete": {
-        "tags": ["Studies"],
+        "tags": [
+          "Studies"
+        ],
         "summary": "Remove a submitter from a study group",
         "parameters": [
           {
@@ -202,19 +223,22 @@
       }
     },
     "schemas": {
-      "CreaetStudyReq": {
+      "CreateStudyReq": {
         "type": "object",
         "properties": {
-          "name": {
+          "description": {
             "type": "string"
           },
-          "studyId": {
+          "name": {
             "type": "string"
           },
           "organization": {
             "type": "string"
           },
-          "description": {
+          "songId": {
+            "type": "string"
+          },
+          "studyId": {
             "type": "string"
           }
         }
@@ -259,6 +283,9 @@
             "items": {
               "type": "string"
             }
+          },
+          "songId": {
+            "type": "string"
           }
         }
       },
@@ -303,14 +330,19 @@
       },
       "ServiceError": {
         "type": "object",
-        "required": ["success", "error"],
+        "required": [
+          "success",
+          "error"
+        ],
         "properties": {
           "success": {
             "type": "boolean"
           },
           "error": {
             "type": "object",
-            "required": ["type"],
+            "required": [
+              "type"
+            ],
             "properties": {
               "message": {
                 "type": "string"

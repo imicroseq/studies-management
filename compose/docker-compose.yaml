@@ -1,8 +1,8 @@
 version: "3.7"
-name: ego
+name: studies-management
 services:
   ego-api:
-    image: "overture/ego:4.4.0"
+    image: "ghcr.io/overture-stack/ego:edge"
     environment:
       SERVER_PORT: 8080
       SPRING_DATASOURCE_URL: jdbc:postgresql://ego-postgres:5432/ego?stringtype=unspecified
@@ -29,7 +29,7 @@ services:
     volumes:
       - "./ego-init:/docker-entrypoint-initdb.d"
     ports:
-      - "9444:5432"
+      - "9445:5432"
 
   song-db:
     image: postgres:11.1
@@ -48,9 +48,9 @@ services:
       SPRING_PROFILES_ACTIVE: "prod,secure,default,score-client-cred"
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_PUBLIC_KEY_LOCATION: http://ego-api:8080/oauth/token/public_key
       AUTH_SERVER_INTROSPECTIONURI: http://ego-api:8080/o/check_api_key/
-      AUTH_SERVER_CLIENTID: song
+      AUTH_SERVER_CLIENTID: adminId
       AUTH_SERVER_TOKENNAME: apiKey
-      AUTH_SERVER_CLIENTSECRET: songsecret
+      AUTH_SERVER_CLIENTSECRET: adminSecret
       AUTH_SERVER_PROVIDER: ego
       AUTH_SERVER_SCOPE_STUDY_PREFIX: song.
       AUTH_SERVER_SCOPE_STUDY_SUFFIX: .WRITE

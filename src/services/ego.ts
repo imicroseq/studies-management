@@ -27,38 +27,47 @@ const studyIdToEgoPolicy = (songId: string, studyId: string) => {
   return prefix + studyId;
 };
 
-export const getEgoStudyGroups = async (studies: SongStudy[]) => {
-  const studyGroups: EgoStudyGroup[] = [];
-  const studyIdsMissingGroups = [];
-  for (const { songId, studyId } of studies) {
-    const egoGroup = await getEgoStudyGroup(songId, studyId);
-    if (!egoGroup) {
-      studyIdsMissingGroups.push(studyId);
-    } else {
-      const studyGroup = {
-        name: egoGroup.name,
-        studyId,
-        songId: songId,
-        id: egoGroup.id,
-        status: egoGroup.status,
-      };
-      studyGroups.push(studyGroup);
-    }
-  }
+export const getEgoStudyGroups = async (
+  studies: SongStudy[]
+): Promise<EgoStudyGroup[]> => {
+  const results = await Promise.all(
+    studies.map(async ({ songId, studyId }) => {
+      const egoGroup = await getEgoStudyGroup(songId, studyId);
 
-  return { studyGroups, studyIdsMissingGroups };
+      if (!egoGroup) {
+        console.error(
+          `Study ID '${studyId}' in song '${songId}' is missing an associated ego group.`
+        );
+        return undefined;
+      }
+
+      return {
+        id: egoGroup.id,
+        name: egoGroup.name,
+        status: egoGroup.status,
+        studyId,
+        songId,
+      };
+    })
+  );
+
+  return results.filter((group) => group !== undefined);
 };
 
-export const getEgoStudyUsers = async (studyGroups: EgoStudyGroup[]) => {
-  const studyUsers: Record<string, string[]> = {};
-  for (const { id, studyId } of studyGroups) {
-    const users = await getWithAuth<EgoGetGroupUsersResponse>(
-      urljoin(env.EGO_URL, "/groups/", id, "/users")
-    ).then(({ resultSet }) => resultSet);
+export const getEgoStudyUsers = async (
+  studyGroups: EgoStudyGroup[]
+): Promise<Record<string, string[]>> => {
+  const results = await Promise.all(
+    studyGroups.map(async ({ id, studyId }) => {
+      const users = await getWithAuth<EgoGetGroupUsersResponse>(
+        urljoin(env.EGO_URL, "/groups/", id, "/users")
+      ).then(({ resultSet }) => resultSet);
 
-    studyUsers[studyId] = users.map((u) => u.email);
-  }
-  return studyUsers;
+      return [studyId, users.map((u) => u.email)];
+    })
+  );
+
+  return Object.fromEntries(results);
 };
 
 export const addUsersToGroup = async (groupId: string, userIds: string[]) => {

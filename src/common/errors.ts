@@ -10,7 +10,7 @@ type ErrrorProps = {
 
 export class ServiceError extends Error {
   name = "ServiceError";
-  message = "Servie error occured!";
+  message = "Service error occured!";
 
   httpStatus: number;
   type: ServiceErrorType;

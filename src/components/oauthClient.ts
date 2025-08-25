@@ -10,6 +10,8 @@ type EgoTokenObj = {
 
 let tokenObj: EgoTokenObj;
 
+let refreshingPromise: Promise<EgoTokenObj> | undefined;
+
 const expiredChecker = (expiresAtEpochMs: number) => {
   return () => Date.now() >= expiresAtEpochMs;
 };
@@ -27,12 +29,26 @@ async function requestNewToken() {
 }
 
 async function getJwt() {
-  if (tokenObj === undefined || tokenObj.isExpired()) {
-    console.debug("Current token is no good, requesting new one!");
-    tokenObj = await requestNewToken();
+  if (tokenObj && !tokenObj.isExpired()) {
+    return tokenObj.jwt;
   }
 
-  return tokenObj.jwt;
+  if (!refreshingPromise) {
+    console.debug("Current token is no good, requesting new one!");
+    refreshingPromise = requestNewToken()
+      .then((newToken) => {
+        tokenObj = newToken;
+        refreshingPromise = undefined; // clear after refresh
+        return newToken;
+      })
+      .catch((err) => {
+        refreshingPromise = undefined; // clear on failure too
+        throw err;
+      });
+  }
+
+  const fresh = await refreshingPromise;
+  return fresh.jwt;
 }
 
 async function getAuthHeader() {
@@ -67,6 +83,14 @@ async function postWithAuth<ExpectedDataType>(
     },
     body: body ? JSON.stringify(body) : undefined,
   }).then(async (res) => {
+    if (!res.ok) {
+      console.error(`[FetchError] Request failed`, {
+        url,
+        status: res.status,
+        statusText: res.statusText,
+      });
+      return { status: res.status, data: {} };
+    }
     return { status: res.status, data: await res.json() };
   });
 }

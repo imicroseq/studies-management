@@ -32,14 +32,8 @@ import {
 export const getStudies = async (songId?: string): Promise<Study[]> => {
   const studyDetails = await getSongStudies(songId);
 
-  const { studyGroups, studyIdsMissingGroups } = await getEgoStudyGroups(
-    studyDetails
-  );
-  console.error(
-    "These SONG study IDs don't have ego groups: ",
-    studyIdsMissingGroups
-  );
-  console.debug(studyGroups);
+  const studyGroups = await getEgoStudyGroups(studyDetails);
+  console.debug("EGO groups found:", studyGroups);
 
   const studyUsers: Record<string, string[]> = await getEgoStudyUsers(
     studyGroups

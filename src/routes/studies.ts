@@ -28,7 +28,9 @@ router.post(
   "/",
   authFilter,
   (req: Request, res: Response, next: NextFunction) => {
-    console.debug("Creating study");
+    console.debug(
+      `Creating study '${req.body.studyId}' in '${req.body.songId}'`
+    );
     createStudy(req.body)
       .then((study) =>
         res.json({

@@ -41,10 +41,11 @@ app.use(function (
   console.error(err.stack);
 
   if (err instanceof ServiceError) {
-    const { httpStatus, type, studyId, submitters, songId } = err;
-    res
-      .status(httpStatus)
-      .json({ success: false, error: { type, studyId, songId, submitters } });
+    const { httpStatus, type, studyId, submitters, sampleType } = err;
+    res.status(httpStatus).json({
+      success: false,
+      error: { type, studyId, sampleType, submitters },
+    });
   } else if (err instanceof UnauthorizedError) {
     res.status(401).send({
       success: false,
@@ -77,7 +78,8 @@ app.listen(env.SERVER_PORT, () => {
   );
   console.log(
     `🎵 Song servers            : ${env.songConfig.map(
-      (config: SongConfigSchema) => `${config.SONG_URL} (${config.SONG_ID})`
+      (config: SongConfigSchema) =>
+        `${config.SONG_URL} (${config.SONG_SAMPLE_TYPE})`
     )}`
   );
   console.log("===============================================");

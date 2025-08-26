@@ -4,7 +4,7 @@ type ErrrorProps = {
   httpStatus: number;
   type: ServiceErrorType;
   studyId?: string;
-  songId?: string;
+  sampleType?: string;
   submitters?: string[];
 };
 
@@ -15,21 +15,21 @@ export class ServiceError extends Error {
   httpStatus: number;
   type: ServiceErrorType;
   studyId?: string;
-  songId?: string;
+  sampleType?: string;
   submitters?: string[];
 
   constructor({
     httpStatus: httpStatus,
     type: type,
     studyId: studyId = "",
-    songId: songId,
+    sampleType: sampleType,
     submitters: submitters = [],
   }: ErrrorProps) {
     super();
     this.httpStatus = httpStatus;
     this.type = type;
     this.studyId = studyId;
-    this.songId = songId;
+    this.sampleType = sampleType;
     this.submitters = submitters;
   }
 }
@@ -43,11 +43,11 @@ export function StudyNotFound(studyId: string): ServiceError {
   return new ServiceError(errorProps);
 }
 
-export function SongIdNotFound(songId: string): ServiceError {
+export function SampleTypeNotFound(sampleType: string): ServiceError {
   const errorProps = {
     httpStatus: 404,
-    type: ServiceErrorType.SONG_ID_NOT_FOUND,
-    songId,
+    type: ServiceErrorType.SAMPLE_TYPE_NOT_FOUND,
+    sampleType,
   };
   return new ServiceError(errorProps);
 }

@@ -36,7 +36,7 @@ The Studies Management service supports connecting to multiple SONG instances.
 To configure the first SONG instance, add this to the `.env` file:
 
 ```
-SONG_1_ID=song1
+SONG_1_SAMPLE_TYPE=clinical
 SONG_1_PREFIX="STUDY-"
 SONG_1_URL="http://localhost:8089"
 ```
@@ -44,11 +44,11 @@ SONG_1_URL="http://localhost:8089"
 To add more SONG instances, increment the number suffix for each variable (`SONG_2*`, `SONG_3*`, etc.). Example:
 
 ```
-SONG_2_ID=song2
+SONG_2_SAMPLE_TYPE=environmental
 SONG_2_PREFIX="WW-"
 SONG_2_URL="http://localhost:8090"
 
-SONG_3_ID=song3
+SONG_3_SAMPLE_TYPE=genomic
 SONG_3_PREFIX="ABC-"
 SONG_3_URL="http://localhost:8091"
 ```

@@ -12,18 +12,18 @@ import urljoin from "url-join";
 import oauthClient from "../components/oauthClient";
 const { getWithAuth, postWithAuth, deleteWithAuth } = oauthClient;
 
-const getStudyPrefix = (songId: string) => {
-  const config = env.songConfig.find((c) => c.SONG_ID === songId);
+const getStudyPrefix = (sampleType: string) => {
+  const config = env.songConfig.find((c) => c.SONG_SAMPLE_TYPE === sampleType);
   return config?.SONG_PREFIX ?? "";
 };
 
-const studyIdToEgoGroup = (songId: string, studyId: string) => {
-  const prefix = getStudyPrefix(songId);
+const studyIdToEgoGroup = (sampleType: string, studyId: string) => {
+  const prefix = getStudyPrefix(sampleType);
   return prefix + studyId;
 };
 
-const studyIdToEgoPolicy = (songId: string, studyId: string) => {
-  const prefix = getStudyPrefix(songId);
+const studyIdToEgoPolicy = (sampleType: string, studyId: string) => {
+  const prefix = getStudyPrefix(sampleType);
   return prefix + studyId;
 };
 
@@ -31,12 +31,12 @@ export const getEgoStudyGroups = async (
   studies: SongStudy[]
 ): Promise<EgoStudyGroup[]> => {
   const results = await Promise.all(
-    studies.map(async ({ songId, studyId }) => {
-      const egoGroup = await getEgoStudyGroup(songId, studyId);
+    studies.map(async ({ sampleType, studyId }) => {
+      const egoGroup = await getEgoStudyGroup(sampleType, studyId);
 
       if (!egoGroup) {
         console.error(
-          `Study ID '${studyId}' in song '${songId}' is missing an associated ego group.`
+          `Study ID '${studyId}' in sample type '${sampleType}' is missing an associated ego group.`
         );
         return undefined;
       }
@@ -46,7 +46,7 @@ export const getEgoStudyGroups = async (
         name: egoGroup.name,
         status: egoGroup.status,
         studyId,
-        songId,
+        sampleType,
       };
     })
   );
@@ -101,10 +101,10 @@ export const getEgoUserGroups = (userId: string): Promise<EgoGroup[]> => {
 };
 
 export async function getEgoStudyGroup(
-  songId: string,
+  sampleType: string,
   studyId: string
 ): Promise<EgoGroup | undefined> {
-  const egoGroupName = studyIdToEgoGroup(songId, studyId);
+  const egoGroupName = studyIdToEgoGroup(sampleType, studyId);
   const url = urljoin(env.EGO_URL, `/groups?query=${egoGroupName}`);
   return getWithAuth<EgoGetGroupsResponse>(url).then(({ resultSet }) =>
     // endpoint does fuzzy search so get group with exactly the same name
@@ -121,13 +121,13 @@ export const getEgoStudyGroupUsers = (groupId: string): Promise<EgoUser[]> => {
 
 // return group id
 export const createEgoStudyGroup = async (
-  songId: string,
+  sampleType: string,
   studyId: string,
   description: string = ""
 ) => {
   const egoCreateGroupRequest = {
     description: description,
-    name: studyIdToEgoGroup(songId, studyId),
+    name: studyIdToEgoGroup(sampleType, studyId),
     status: "APPROVED",
   };
   const res = await postWithAuth<{ id: string }>(
@@ -142,9 +142,12 @@ export const createEgoStudyGroup = async (
   }
 };
 
-export const createEgoStudyPolicy = async (songId: string, studyId: string) => {
+export const createEgoStudyPolicy = async (
+  sampleType: string,
+  studyId: string
+) => {
   const egoCreatePolicyRequest = {
-    name: studyIdToEgoPolicy(songId, studyId),
+    name: studyIdToEgoPolicy(sampleType, studyId),
   };
   const egoCreatePolicyRes = await postWithAuth<{ id: string }>(
     urljoin(env.EGO_URL, "/policies"),

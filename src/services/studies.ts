@@ -29,8 +29,8 @@ import {
   getEgoUserGroups,
 } from "./ego";
 
-export const getStudies = async (songId?: string): Promise<Study[]> => {
-  const studyDetails = await getSongStudies(songId);
+export const getStudies = async (sampleType?: string): Promise<Study[]> => {
+  const studyDetails = await getSongStudies(sampleType);
 
   const studyGroups = await getEgoStudyGroups(studyDetails);
   console.debug("EGO groups found:", studyGroups);
@@ -40,9 +40,11 @@ export const getStudies = async (songId?: string): Promise<Study[]> => {
   );
 
   return studyGroups
-    .map((sg) => {
+    .map((group) => {
       const studyDetail = studyDetails.find(
-        (sd) => sd.studyId === sg.studyId && sd.songId === sg.songId
+        (study) =>
+          study.studyId === group.studyId &&
+          study.sampleType === group.sampleType
       );
       if (!studyDetail) {
         return null;
@@ -52,7 +54,7 @@ export const getStudies = async (songId?: string): Promise<Study[]> => {
         description: studyDetail.description,
         name: studyDetail.name,
         organization: studyDetail.organization,
-        songId: studyDetail.songId,
+        sampleType: studyDetail.sampleType,
         studyId: studyDetail.studyId,
         submitters: studyUsers[studyDetail.studyId] || [],
       };
@@ -61,8 +63,8 @@ export const getStudies = async (songId?: string): Promise<Study[]> => {
 };
 
 export const createStudy = async (req: CreateStudyReq): Promise<Study> => {
-  const existingSongIds = await getSongStudyIds(req.songId);
-  if (existingSongIds.includes(req.studyId)) {
+  const existingSongStudyIds = await getSongStudyIds(req.sampleType);
+  if (existingSongStudyIds.includes(req.studyId)) {
     throw StudyAlreadyExists(req.studyId);
   }
 
@@ -73,7 +75,7 @@ export const createStudy = async (req: CreateStudyReq): Promise<Study> => {
   }
 
   const groupId = await createEgoStudyGroup(
-    req.songId,
+    req.sampleType,
     req.studyId,
     req.description
   );
@@ -82,7 +84,7 @@ export const createStudy = async (req: CreateStudyReq): Promise<Study> => {
     throw FailedToCreateStudy(req.studyId);
   }
 
-  const policyId = await createEgoStudyPolicy(req.songId, req.studyId);
+  const policyId = await createEgoStudyPolicy(req.sampleType, req.studyId);
   if (!policyId) {
     console.error(`Failed to create study policy in EGO`, JSON.stringify(req));
     throw FailedToCreateStudy(req.studyId);
@@ -104,7 +106,7 @@ export const createStudy = async (req: CreateStudyReq): Promise<Study> => {
 };
 
 export const addSubmittersToStudy = async (req: AddSubmittersReq) => {
-  const egoGroup = await getEgoStudyGroup(req.songId, req.studyId);
+  const egoGroup = await getEgoStudyGroup(req.sampleType, req.studyId);
   if (!egoGroup) {
     throw StudyNotFound(req.studyId);
   }
@@ -141,7 +143,7 @@ export const addSubmittersToStudy = async (req: AddSubmittersReq) => {
 };
 
 export const removeSubmitterFromStudy = async (req: RemoveSubmitterReq) => {
-  const egoGroup = await getEgoStudyGroup(req.songId, req.studyId);
+  const egoGroup = await getEgoStudyGroup(req.sampleType, req.studyId);
   if (!egoGroup) {
     throw StudyNotFound(req.studyId);
   }

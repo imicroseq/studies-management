@@ -43,7 +43,7 @@
         "parameters": [
           {
             "in": "query",
-            "name": "songId",
+            "name": "sampleType",
             "schema": {
               "type": "string"
             }
@@ -235,7 +235,7 @@
           "organization": {
             "type": "string"
           },
-          "songId": {
+          "sampleType": {
             "type": "string"
           },
           "studyId": {
@@ -284,7 +284,7 @@
               "type": "string"
             }
           },
-          "songId": {
+          "sampleType": {
             "type": "string"
           }
         }

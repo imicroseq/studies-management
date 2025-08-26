@@ -2,7 +2,7 @@ export type Study = {
   description: string;
   name: string;
   organization: string;
-  songId: string;
+  sampleType: string;
   studyId: string;
   submitters: string[];
 };
@@ -10,7 +10,7 @@ export type Study = {
 export type EgoStudyGroup = {
   id: string;
   name: string;
-  songId: string;
+  sampleType: string;
   status: string;
   studyId: string;
 };
@@ -20,7 +20,7 @@ export type SongStudy = {
   studyId: string;
   organization: string;
   description: string;
-  songId: string;
+  sampleType: string;
 };
 
 export type EgoUser = {
@@ -49,18 +49,18 @@ export type CreateStudyReq = {
   description: string;
   name: string;
   organization: string;
-  songId: string;
+  sampleType: string;
   studyId: string;
 };
 
 export type AddSubmittersReq = {
-  songId: string;
+  sampleType: string;
   studyId: string;
   submitters: string[];
 };
 
 export type RemoveSubmitterReq = {
-  songId: string;
+  sampleType: string;
   studyId: string;
   submitter: string;
 };
@@ -69,7 +69,7 @@ export enum ServiceErrorType {
   STUDY_NOT_FOUND = "STUDY_NOT_FOUND",
   SUBMITTERS_NOT_FOUND = "SUBMITTERS_NOT_FOUND",
   STUDY_ALREADY_EXISTS = "STUDY_ALREADY_EXISTS",
-  SONG_ID_NOT_FOUND = "SONG_ID_NOT_FOUND",
+  SAMPLE_TYPE_NOT_FOUND = "SAMPLE_TYPE_NOT_FOUND",
   SUBMITTERS_ALREADY_IN_STUDY = "SUBMITTERS_ALREADY_IN_STUDY",
   SUBMITTER_NOT_IN_STUDY = "SUBMITTER_NOT_IN_STUDY",
   FAILED_TO_CREATE_STUDY = "FAILED_TO_CREATE_STUDY",

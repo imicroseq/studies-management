@@ -3,7 +3,7 @@ import z from "zod";
 // Define the number of songs based on the environment variables present
 const getSongConfigCount = (): number => {
   let count = 1;
-  while (process.env[`SONG_${count}_ID`]) {
+  while (process.env[`SONG_${count}_URL`]) {
     count++;
   }
   return count - 1;
@@ -11,7 +11,7 @@ const getSongConfigCount = (): number => {
 
 const songConfigSchema = z.object({
   SONG_URL: z.url(),
-  SONG_ID: z.string(),
+  SONG_SAMPLE_TYPE: z.string(),
   SONG_PREFIX: z.string(),
 });
 
@@ -31,7 +31,7 @@ export const validateSongConfig = (
 
     const songConfig = {
       SONG_URL: env[`${baseKeyPrefix}_URL`],
-      SONG_ID: env[`${baseKeyPrefix}_ID`],
+      SONG_SAMPLE_TYPE: env[`${baseKeyPrefix}_SAMPLE_TYPE`],
       SONG_PREFIX: env[`${baseKeyPrefix}_PREFIX`],
     };
 

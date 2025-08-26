@@ -15,8 +15,8 @@ router.get(
   authFilter,
   (req: Request, res: Response, next: NextFunction) => {
     console.debug("Fetching studies");
-    const songId = req.query.songId?.toString();
-    getStudies(songId)
+    const sampleType = req.query.sampleType?.toString();
+    getStudies(sampleType)
       .then((studies) =>
         res.json({ success: true, message: "Found studies", data: studies })
       )
@@ -29,7 +29,7 @@ router.post(
   authFilter,
   (req: Request, res: Response, next: NextFunction) => {
     console.debug(
-      `Creating study '${req.body.studyId}' in '${req.body.songId}'`
+      `Creating study '${req.body.studyId}' in '${req.body.sampleType}' sample type`
     );
     createStudy(req.body)
       .then((study) =>
@@ -66,7 +66,7 @@ router.delete(
   (req: Request, res: Response, next: NextFunction) => {
     console.debug("Removing submitters");
     const removeReq = {
-      songId: req.query.songId?.toString() || "",
+      sampleType: req.query.sampleType?.toString() || "",
       studyId: req.query.studyId?.toString() || "",
       submitter: req.query.submitter?.toString() || "",
     };

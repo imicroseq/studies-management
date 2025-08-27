@@ -153,6 +153,13 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "sampleType",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -324,6 +331,9 @@
             "type": "string"
           },
           "submitter": {
+            "type": "string"
+          },
+          "sampleType": {
             "type": "string"
           }
         }

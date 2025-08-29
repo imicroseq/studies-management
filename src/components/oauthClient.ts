@@ -57,7 +57,7 @@ async function getAuthHeader() {
 }
 
 async function get<ExpectedDataType>(url: string): Promise<ExpectedDataType> {
-  console.log(`Fetch ${url}`);
+  console.debug(`Fetch ${url}`);
   return await fetch(url).then((res) => res.json());
 }
 
@@ -65,7 +65,7 @@ async function getWithAuth<ExpectedDataType>(
   url: string
 ): Promise<ExpectedDataType> {
   const headers = await getAuthHeader();
-  console.log(`Fetch with auth ${url}`);
+  console.debug(`Fetch with auth ${url}`);
   return await fetch(url, { method: 'GET', headers }).then((res) => res.json());
 }
 
@@ -83,15 +83,16 @@ async function postWithAuth<ExpectedDataType>(
     },
     body: body ? JSON.stringify(body) : undefined,
   }).then(async (res) => {
-    if (!res.ok) {
-      console.error(`[FetchError] Request failed`, {
-        url,
-        status: res.status,
-        statusText: res.statusText,
-      });
-      return { status: res.status, data: {} };
+    if (res.ok) {
+      return { status: res.status, data: await res.json() };
     }
-    return { status: res.status, data: await res.json() };
+
+    console.error(`[FetchError] Request failed`, {
+      url,
+      status: res.status,
+      statusText: res.statusText,
+    });
+    return { status: res.status, data: {} };
   });
 }
 

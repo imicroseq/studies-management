@@ -1,11 +1,11 @@
 import 'dotenv/config';
 
-import { z } from 'zod';
+import { z as zod } from 'zod';
 
-export const baseConfig = z.object({
-  EGO_URL: z.url(),
-  SCOPES_WRITE: z.string(),
-  SERVER_PORT: z.coerce.number().default(3001),
-  OAUTH_CLIENT_ID: z.string(),
-  OAUTH_CLIENT_SECRET: z.string(),
+export const baseConfig = zod.object({
+  EGO_URL: zod.url(),
+  SCOPES_WRITE: zod.string(),
+  SERVER_PORT: zod.coerce.number().default(3001),
+  OAUTH_CLIENT_ID: zod.string(),
+  OAUTH_CLIENT_SECRET: zod.string(),
 });

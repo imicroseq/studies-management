@@ -33,24 +33,34 @@ SCOPES_WRITE="DOMAIN.WRITE"
 
 The Studies Management service supports connecting to multiple SONG instances.
 
-To configure the first SONG instance, add this to the `.env` file:
+#### Configuration Format:
+
+Each SONG instance requires following environment variables with a numbered suffix starting from `0`:
+
+- `SONG_X_SAMPLE_TYPE` - defines the sample type
+- `SONG_X_PREFIX` - sets the prefix for studies
+- `SONG_X_URL` - specifies the service endpoint
+
+#### Setup example:
+
+First SONG instance starts with a sequential number suffix starting from `0`:
 
 ```
-SONG_1_SAMPLE_TYPE=clinical
-SONG_1_PREFIX="STUDY-"
-SONG_1_URL="http://localhost:8089"
+SONG_0_SAMPLE_TYPE=clinical
+SONG_0_PREFIX="STUDY-"
+SONG_0_URL="http://localhost:8089"
 ```
 
-To add more SONG instances, increment the number suffix for each variable (`SONG_2*`, `SONG_3*`, etc.). Example:
+Additional instances use sequential numbering (`SONG_1*`, `SONG_2*`, etc.):
 
 ```
-SONG_2_SAMPLE_TYPE=environmental
-SONG_2_PREFIX="WW-"
-SONG_2_URL="http://localhost:8090"
+SONG_1_SAMPLE_TYPE=environmental
+SONG_1_PREFIX="WW-"
+SONG_1_URL="http://localhost:8090"
 
-SONG_3_SAMPLE_TYPE=genomic
-SONG_3_PREFIX="ABC-"
-SONG_3_URL="http://localhost:8091"
+SONG_2_SAMPLE_TYPE=genomic
+SONG_2_PREFIX="ABC-"
+SONG_2_URL="http://localhost:8091"
 ```
 
 ### Start app:

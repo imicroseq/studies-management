@@ -1,21 +1,21 @@
-import z from 'zod';
+import { z as zod } from 'zod';
 
 // Define the number of songs based on the environment variables present
 const getSongConfigCount = (): number => {
-  let count = 1;
+  let count = 0;
   while (process.env[`SONG_${count}_URL`]) {
     count++;
   }
-  return count - 1;
+  return count;
 };
 
-const songConfigSchema = z.object({
-  SONG_URL: z.url(),
-  SONG_SAMPLE_TYPE: z.string(),
-  SONG_PREFIX: z.string(),
+const songConfigSchema = zod.object({
+  SONG_URL: zod.url(),
+  SONG_SAMPLE_TYPE: zod.string(),
+  SONG_PREFIX: zod.string(),
 });
 
-export type SongConfigSchema = z.infer<typeof songConfigSchema>;
+export type SongConfigSchema = zod.infer<typeof songConfigSchema>;
 
 export const validateSongConfig = (
   env: NodeJS.ProcessEnv
@@ -25,7 +25,7 @@ export const validateSongConfig = (
   const songCount = getSongConfigCount();
 
   // Loop through the repositories found
-  for (let i = 1; i <= songCount; i++) {
+  for (let i = 0; i < songCount; i++) {
     // Collect the environment variables for the repository
     const baseKeyPrefix = `SONG_${i}`;
 
@@ -39,7 +39,7 @@ export const validateSongConfig = (
       const parsed = songConfigSchema.parse(songConfig);
       resultSongConfiguration.push(parsed);
     } catch (error) {
-      if (error instanceof z.ZodError) {
+      if (error instanceof zod.ZodError) {
         error.issues.forEach((issue) => {
           console.error(
             `Validation failed for repository ${baseKeyPrefix}`,

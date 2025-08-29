@@ -2,7 +2,7 @@ version: '3.7'
 name: studies-management
 services:
   ego-api:
-    image: 'ghcr.io/overture-stack/ego:edge'
+    image: 'ghcr.io/overture-stack/ego:a5eb792a'
     environment:
       SERVER_PORT: 8080
       SPRING_DATASOURCE_URL: jdbc:postgresql://ego-postgres:5432/ego?stringtype=unspecified

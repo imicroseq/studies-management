@@ -1,15 +1,19 @@
 // dotenv should be first line executed
 require('dotenv').config();
 
-import { ForbiddenError, UnauthorizedError } from '@overture-stack/ego-token-middleware';
+import {
+  ForbiddenError,
+  UnauthorizedError,
+} from '@overture-stack/ego-token-middleware';
 import cors from 'cors';
 import express, { NextFunction, Request, Response } from 'express';
 import swaggerUi from 'swagger-ui-express';
 import { ServiceError } from './common/errors';
 import { GeneralErrorType } from './common/types';
-import { SERVER_PORT } from './config';
+import { env } from './config';
 import swaggerDocument from './resources/swagger-def.json';
 import studiesRouter from './routes/studies';
+import type { SongConfigSchema } from './config/songConfig';
 
 // *** create and init app ***
 const app = express();
@@ -37,8 +41,11 @@ app.use(function (
   console.error(err.stack);
 
   if (err instanceof ServiceError) {
-    const { httpStatus, type, studyId, submitters } = err;
-    res.status(httpStatus).json({ success: false, error: { type, studyId, submitters } });
+    const { httpStatus, type, studyId, submitters, sampleType } = err;
+    res.status(httpStatus).json({
+      success: false,
+      error: { type, studyId, sampleType, submitters },
+    });
   } else if (err instanceof UnauthorizedError) {
     res.status(401).send({
       success: false,
@@ -61,4 +68,19 @@ app.use(function (
 });
 
 // *** listen on port ***
-app.listen(SERVER_PORT, () => console.log(`App should be running at ${SERVER_PORT}!`));
+app.listen(env.SERVER_PORT, () => {
+  console.log('================ Server Startup ================');
+  console.log(
+    `📡 Listening on            : http://localhost:${env.SERVER_PORT}`
+  );
+  console.log(
+    `📖 Swagger Docs            : http://localhost:${env.SERVER_PORT}/api-docs`
+  );
+  console.log(
+    `🎵 Song servers            : ${env.songConfig.map(
+      (config: SongConfigSchema) =>
+        `${config.SONG_URL} (${config.SONG_SAMPLE_TYPE})`
+    )}`
+  );
+  console.log('===============================================');
+});

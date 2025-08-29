@@ -1,15 +1,17 @@
 {
   "compilerOptions": {
     "incremental": true,
-    "target": "es6",
-    "module": "commonjs",
+    "target": "esnext",
+    "module": "NodeNext",
     "resolveJsonModule": true,
     "sourceMap": true,
     "outDir": "dist",
     "strict": true,
     "noImplicitAny": true,
-    "moduleResolution": "node",
+    "moduleResolution": "NodeNext",
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
   }
 }

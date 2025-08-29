@@ -1,5 +1,6 @@
 import urljoin from 'url-join';
-import { EGO_URL, EGO_OAUTH_ENDPOINT, OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET } from '../config';
+import { EGO_OAUTH_ENDPOINT } from '../common/constants';
+import { env } from '../config';
 import fetch from 'node-fetch';
 
 type EgoTokenObj = {
@@ -9,15 +10,17 @@ type EgoTokenObj = {
 
 let tokenObj: EgoTokenObj;
 
+let refreshingPromise: Promise<EgoTokenObj> | undefined;
+
 const expiredChecker = (expiresAtEpochMs: number) => {
   return () => Date.now() >= expiresAtEpochMs;
 };
 
 async function requestNewToken() {
-  const endpointQuery = `${EGO_OAUTH_ENDPOINT}?client_id=${OAUTH_CLIENT_ID}&client_secret=${OAUTH_CLIENT_SECRET}&grant_type=client_credentials`;
-  const tokenInfo = await fetch(urljoin(EGO_URL, endpointQuery), { method: 'POST' }).then((res) =>
-    res.json()
-  );
+  const endpointQuery = `${EGO_OAUTH_ENDPOINT}?client_id=${env.OAUTH_CLIENT_ID}&client_secret=${env.OAUTH_CLIENT_SECRET}&grant_type=client_credentials`;
+  const tokenInfo = await fetch(urljoin(env.EGO_URL, endpointQuery), {
+    method: 'POST',
+  }).then((res) => res.json());
 
   return {
     jwt: tokenInfo.access_token,
@@ -26,12 +29,26 @@ async function requestNewToken() {
 }
 
 async function getJwt() {
-  if (tokenObj === undefined || tokenObj.isExpired()) {
-    console.debug('Current token is no good, requesting new one!');
-    tokenObj = await requestNewToken();
+  if (tokenObj && !tokenObj.isExpired()) {
+    return tokenObj.jwt;
   }
 
-  return tokenObj.jwt;
+  if (!refreshingPromise) {
+    console.debug('Current token is no good, requesting new one!');
+    refreshingPromise = requestNewToken()
+      .then((newToken) => {
+        tokenObj = newToken;
+        refreshingPromise = undefined; // clear after refresh
+        return newToken;
+      })
+      .catch((err) => {
+        refreshingPromise = undefined; // clear on failure too
+        throw err;
+      });
+  }
+
+  const fresh = await refreshingPromise;
+  return fresh.jwt;
 }
 
 async function getAuthHeader() {
@@ -40,11 +57,15 @@ async function getAuthHeader() {
 }
 
 async function get<ExpectedDataType>(url: string): Promise<ExpectedDataType> {
+  console.debug(`Fetch ${url}`);
   return await fetch(url).then((res) => res.json());
 }
 
-async function getWithAuth<ExpectedDataType>(url: string): Promise<ExpectedDataType> {
+async function getWithAuth<ExpectedDataType>(
+  url: string
+): Promise<ExpectedDataType> {
   const headers = await getAuthHeader();
+  console.debug(`Fetch with auth ${url}`);
   return await fetch(url, { method: 'GET', headers }).then((res) => res.json());
 }
 
@@ -55,10 +76,23 @@ async function postWithAuth<ExpectedDataType>(
   const authHeaders = await getAuthHeader();
   return await fetch(url, {
     method: 'POST',
-    headers: { ...authHeaders, Accept: 'application/json', 'Content-Type': 'application/json' },
+    headers: {
+      ...authHeaders,
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    },
     body: body ? JSON.stringify(body) : undefined,
   }).then(async (res) => {
-    return { status: res.status, data: await res.json() };
+    if (res.ok) {
+      return { status: res.status, data: await res.json() };
+    }
+
+    console.error(`[FetchError] Request failed`, {
+      url,
+      status: res.status,
+      statusText: res.statusText,
+    });
+    return { status: res.status, data: {} };
   });
 }
 

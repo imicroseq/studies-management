@@ -1,73 +1,92 @@
-import { EGO_URL, EGO_STUDY_PREFIX } from '../config';
+import { env } from '../config';
 import {
   EgoStudyGroup,
   EgoGetGroupsResponse,
   EgoGetGroupUsersResponse,
   EgoUser,
   EgoGroup,
+  type SongStudy,
 } from '../common/types';
 import urljoin from 'url-join';
 
 import oauthClient from '../components/oauthClient';
 const { getWithAuth, postWithAuth, deleteWithAuth } = oauthClient;
 
-function egoGroupToStudyId(egoGroupName: string) {
-  return egoGroupName.replace(EGO_STUDY_PREFIX, '');
-}
-
-function studyIdToEgoGroup(studyId: string) {
-  return EGO_STUDY_PREFIX + studyId;
-}
-
-function studyIdToEgoPolicy(studyId: string) {
-  return EGO_STUDY_PREFIX + studyId;
-}
-
-export const getEgoStudyGroups = async (studyIds: string[]) => {
-  const studyGroups: EgoStudyGroup[] = [];
-  const studyIdsMissingGroups = [];
-  for (const studyId of studyIds) {
-    const egoGroup = await getEgoStudyGroup(studyId);
-    if (!egoGroup) {
-      studyIdsMissingGroups.push(studyId);
-    } else {
-      const studyGroup = {
-        name: egoGroup.name,
-        studyId: egoGroupToStudyId(egoGroup.name),
-        id: egoGroup.id,
-        status: egoGroup.status,
-      };
-      studyGroups.push(studyGroup);
-    }
-  }
-
-  return { studyGroups, studyIdsMissingGroups };
+const getStudyPrefix = (sampleType: string) => {
+  const config = env.songConfig.find((c) => c.SONG_SAMPLE_TYPE === sampleType);
+  return config?.SONG_PREFIX ?? '';
 };
 
-export const getEgoStudyUsers = async (studyGroups: EgoStudyGroup[]) => {
-  const studyUsers: Record<string, string[]> = {};
-  for (const { id, studyId } of studyGroups) {
-    const users = await getWithAuth<EgoGetGroupUsersResponse>(
-      urljoin(EGO_URL, '/groups/', id, '/users')
-    ).then(({ resultSet }) => resultSet);
+const studyIdToEgoGroup = (sampleType: string, studyId: string) => {
+  const prefix = getStudyPrefix(sampleType);
+  return prefix + studyId;
+};
 
-    studyUsers[studyId] = users.map((u) => u.email);
-  }
-  return studyUsers;
+const studyIdToEgoPolicy = (sampleType: string, studyId: string) => {
+  const prefix = getStudyPrefix(sampleType);
+  return prefix + studyId;
+};
+
+export const getEgoStudyGroups = async (
+  studies: SongStudy[]
+): Promise<EgoStudyGroup[]> => {
+  const results = await Promise.all(
+    studies.map(async ({ sampleType, studyId }) => {
+      const egoGroup = await getEgoStudyGroup(sampleType, studyId);
+
+      if (!egoGroup) {
+        console.error(
+          `Study ID '${studyId}' in sample type '${sampleType}' is missing an associated ego group.`
+        );
+        return undefined;
+      }
+
+      return {
+        id: egoGroup.id,
+        name: egoGroup.name,
+        status: egoGroup.status,
+        studyId,
+        sampleType,
+      };
+    })
+  );
+
+  return results.filter((group) => group !== undefined);
+};
+
+export const getEgoStudyUsers = async (
+  studyGroups: EgoStudyGroup[]
+): Promise<Record<string, string[]>> => {
+  const results = await Promise.all(
+    studyGroups.map(async ({ id, studyId }) => {
+      const users = await getWithAuth<EgoGetGroupUsersResponse>(
+        urljoin(env.EGO_URL, '/groups/', id, '/users')
+      ).then(({ resultSet }) => resultSet);
+
+      return [studyId, users.map((u) => u.email)];
+    })
+  );
+
+  return Object.fromEntries(results);
 };
 
 export const addUsersToGroup = async (groupId: string, userIds: string[]) => {
-  const res = await postWithAuth(urljoin(EGO_URL, '/groups/', groupId, '/users'), userIds);
+  const res = await postWithAuth(
+    urljoin(env.EGO_URL, '/groups/', groupId, '/users'),
+    userIds
+  );
   return res.status === 200;
 };
 
 export const removeUserFromGroup = async (groupId: string, userId: string) => {
-  const res = await deleteWithAuth(urljoin(EGO_URL, '/groups/', groupId, '/users/', userId));
+  const res = await deleteWithAuth(
+    urljoin(env.EGO_URL, '/groups/', groupId, '/users/', userId)
+  );
   return res.status === 200;
 };
 
 export async function getEgoUser(email: string): Promise<EgoUser | undefined> {
-  const url = urljoin(EGO_URL, `/users?query=${email}`);
+  const url = urljoin(env.EGO_URL, `/users?query=${email}`);
   return getWithAuth<EgoGetGroupUsersResponse>(url).then(({ resultSet }) =>
     // endpoint does fuzzy search so get user with exactly the same email
     resultSet.find((g) => g.email === email)
@@ -75,13 +94,18 @@ export async function getEgoUser(email: string): Promise<EgoUser | undefined> {
 }
 
 export const getEgoUserGroups = (userId: string): Promise<EgoGroup[]> => {
-  const url = urljoin(EGO_URL, `/users/${userId}/groups`);
-  return getWithAuth<EgoGetGroupsResponse>(url).then(({ resultSet }) => resultSet);
+  const url = urljoin(env.EGO_URL, `/users/${userId}/groups`);
+  return getWithAuth<EgoGetGroupsResponse>(url).then(
+    ({ resultSet }) => resultSet
+  );
 };
 
-export async function getEgoStudyGroup(studyId: string): Promise<EgoGroup | undefined> {
-  const egoGroupName = studyIdToEgoGroup(studyId);
-  const url = urljoin(EGO_URL, `/groups?query=${egoGroupName}`);
+export async function getEgoStudyGroup(
+  sampleType: string,
+  studyId: string
+): Promise<EgoGroup | undefined> {
+  const egoGroupName = studyIdToEgoGroup(sampleType, studyId);
+  const url = urljoin(env.EGO_URL, `/groups?query=${egoGroupName}`);
   return getWithAuth<EgoGetGroupsResponse>(url).then(({ resultSet }) =>
     // endpoint does fuzzy search so get group with exactly the same name
     resultSet.find((g) => g.name === egoGroupName)
@@ -89,19 +113,25 @@ export async function getEgoStudyGroup(studyId: string): Promise<EgoGroup | unde
 }
 
 export const getEgoStudyGroupUsers = (groupId: string): Promise<EgoUser[]> => {
-  const url = urljoin(EGO_URL, `/groups/${groupId}/users`);
-  return getWithAuth<EgoGetGroupUsersResponse>(url).then(({ resultSet }) => resultSet);
+  const url = urljoin(env.EGO_URL, `/groups/${groupId}/users`);
+  return getWithAuth<EgoGetGroupUsersResponse>(url).then(
+    ({ resultSet }) => resultSet
+  );
 };
 
 // return group id
-export const createEgoStudyGroup = async (studyId: string, description: string = '') => {
+export const createEgoStudyGroup = async (
+  sampleType: string,
+  studyId: string,
+  description: string = ''
+) => {
   const egoCreateGroupRequest = {
     description: description,
-    name: studyIdToEgoGroup(studyId),
+    name: studyIdToEgoGroup(sampleType, studyId),
     status: 'APPROVED',
   };
   const res = await postWithAuth<{ id: string }>(
-    urljoin(EGO_URL, '/groups'),
+    urljoin(env.EGO_URL, '/groups'),
     egoCreateGroupRequest
   );
 
@@ -112,12 +142,15 @@ export const createEgoStudyGroup = async (studyId: string, description: string =
   }
 };
 
-export const createEgoStudyPolicy = async (studyId: string) => {
+export const createEgoStudyPolicy = async (
+  sampleType: string,
+  studyId: string
+) => {
   const egoCreatePolicyRequest = {
-    name: studyIdToEgoPolicy(studyId),
+    name: studyIdToEgoPolicy(sampleType, studyId),
   };
   const egoCreatePolicyRes = await postWithAuth<{ id: string }>(
-    urljoin(EGO_URL, '/policies'),
+    urljoin(env.EGO_URL, '/policies'),
     egoCreatePolicyRequest
   );
   if (egoCreatePolicyRes.status === 200) {
@@ -127,12 +160,15 @@ export const createEgoStudyPolicy = async (studyId: string) => {
   }
 };
 
-export const addGroupToPolicyWithWriteMask = async (groupId: string, policyId: string) => {
+export const addGroupToPolicyWithWriteMask = async (
+  groupId: string,
+  policyId: string
+) => {
   const mask = {
     mask: 'WRITE',
   };
   const egoUpdateGroupPermissionRes = await postWithAuth(
-    urljoin(EGO_URL, `/policies/${policyId}/permission/group/${groupId}`),
+    urljoin(env.EGO_URL, `/policies/${policyId}/permission/group/${groupId}`),
     mask
   );
   console.log(egoUpdateGroupPermissionRes);

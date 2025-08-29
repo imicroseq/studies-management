@@ -1,16 +1,18 @@
 export type Study = {
-  name: string;
-  studyId: string;
-  organization: string;
   description: string;
+  name: string;
+  organization: string;
+  sampleType: string;
+  studyId: string;
   submitters: string[];
 };
 
 export type EgoStudyGroup = {
-  name: string;
-  studyId: string;
   id: string;
+  name: string;
+  sampleType: string;
   status: string;
+  studyId: string;
 };
 
 export type SongStudy = {
@@ -18,6 +20,7 @@ export type SongStudy = {
   studyId: string;
   organization: string;
   description: string;
+  sampleType: string;
 };
 
 export type EgoUser = {
@@ -43,18 +46,21 @@ export type EgoGetResponse<T> = {
 };
 
 export type CreateStudyReq = {
-  studyId: string;
-  organization: string;
-  name: string;
   description: string;
+  name: string;
+  organization: string;
+  sampleType: string;
+  studyId: string;
 };
 
 export type AddSubmittersReq = {
+  sampleType: string;
   studyId: string;
   submitters: string[];
 };
 
 export type RemoveSubmitterReq = {
+  sampleType: string;
   studyId: string;
   submitter: string;
 };
@@ -63,7 +69,8 @@ export enum ServiceErrorType {
   STUDY_NOT_FOUND = 'STUDY_NOT_FOUND',
   SUBMITTERS_NOT_FOUND = 'SUBMITTERS_NOT_FOUND',
   STUDY_ALREADY_EXISTS = 'STUDY_ALREADY_EXISTS',
-  SUBMITTERS_ALREADY_IN_STUDY = 'SUBMITTER_ALREADY_IN_STUDY',
+  SAMPLE_TYPE_NOT_FOUND = 'SAMPLE_TYPE_NOT_FOUND',
+  SUBMITTERS_ALREADY_IN_STUDY = 'SUBMITTERS_ALREADY_IN_STUDY',
   SUBMITTER_NOT_IN_STUDY = 'SUBMITTER_NOT_IN_STUDY',
   FAILED_TO_CREATE_STUDY = 'FAILED_TO_CREATE_STUDY',
   FAILED_TO_REMOVE_SUBMITTER_FROM_STUDY = 'FAILED_TO_REMOVE_SUBMITTER_FROM_STUDY',

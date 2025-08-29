@@ -1,6 +1,6 @@
-import "dotenv/config";
+import 'dotenv/config';
 
-import { z } from "zod";
+import { z } from 'zod';
 
 export const baseConfig = z.object({
   EGO_URL: z.url(),

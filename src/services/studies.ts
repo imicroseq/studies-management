@@ -3,7 +3,7 @@ import {
   CreateStudyReq,
   RemoveSubmitterReq,
   Study,
-} from "../common/types";
+} from '../common/types';
 import {
   FailedToRemoveSubmitterFromStudy,
   FailedToCreateStudy,
@@ -13,8 +13,8 @@ import {
   StudyAlreadyExists,
   SubmittersAlreadyInStudy,
   SubmitterNotInStudy,
-} from "../common/errors";
-import { createSongStudy, getSongStudies, getSongStudyIds } from "./song";
+} from '../common/errors';
+import { createSongStudy, getSongStudies, getSongStudyIds } from './song';
 import {
   getEgoStudyGroups,
   getEgoStudyUsers,
@@ -27,13 +27,13 @@ import {
   addGroupToPolicyWithWriteMask,
   getEgoStudyGroupUsers,
   getEgoUserGroups,
-} from "./ego";
+} from './ego';
 
 export const getStudies = async (sampleType?: string): Promise<Study[]> => {
   const studyDetails = await getSongStudies(sampleType);
 
   const studyGroups = await getEgoStudyGroups(studyDetails);
-  console.debug("EGO groups found:", studyGroups);
+  console.debug('EGO groups found:', studyGroups);
 
   const studyUsers: Record<string, string[]> = await getEgoStudyUsers(
     studyGroups

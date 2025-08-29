@@ -1,4 +1,4 @@
-import z from "zod";
+import z from 'zod';
 
 // Define the number of songs based on the environment variables present
 const getSongConfigCount = (): number => {
@@ -48,7 +48,7 @@ export const validateSongConfig = (
         });
       }
       throw new Error(
-        "There is an error with the server environment variables."
+        'There is an error with the server environment variables.'
       );
     }
   }

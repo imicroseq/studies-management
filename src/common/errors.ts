@@ -1,4 +1,4 @@
-import { ServiceErrorType } from "./types";
+import { ServiceErrorType } from './types';
 
 type ErrrorProps = {
   httpStatus: number;
@@ -9,8 +9,8 @@ type ErrrorProps = {
 };
 
 export class ServiceError extends Error {
-  name = "ServiceError";
-  message = "Service error occured!";
+  name = 'ServiceError';
+  message = 'Service error occured!';
 
   httpStatus: number;
   type: ServiceErrorType;
@@ -21,7 +21,7 @@ export class ServiceError extends Error {
   constructor({
     httpStatus: httpStatus,
     type: type,
-    studyId: studyId = "",
+    studyId: studyId = '',
     sampleType: sampleType,
     submitters: submitters = [],
   }: ErrrorProps) {

@@ -3,29 +3,29 @@ import {
   createStudy,
   getStudies,
   removeSubmitterFromStudy,
-} from "../services/studies";
-import { NextFunction, Request, Response } from "express";
-import express from "express";
-import authFilter from "../components/authFilter";
+} from '../services/studies';
+import { NextFunction, Request, Response } from 'express';
+import express from 'express';
+import authFilter from '../components/authFilter';
 
 const router = express.Router();
 
 router.get(
-  "/",
+  '/',
   authFilter,
   (req: Request, res: Response, next: NextFunction) => {
-    console.debug("Fetching studies");
+    console.debug('Fetching studies');
     const sampleType = req.query.sampleType?.toString();
     getStudies(sampleType)
       .then((studies) =>
-        res.json({ success: true, message: "Found studies", data: studies })
+        res.json({ success: true, message: 'Found studies', data: studies })
       )
       .catch(next);
   }
 );
 
 router.post(
-  "/",
+  '/',
   authFilter,
   (req: Request, res: Response, next: NextFunction) => {
     console.debug(
@@ -35,7 +35,7 @@ router.post(
       .then((study) =>
         res.json({
           success: true,
-          message: "Study successfully created!",
+          message: 'Study successfully created!',
           data: study,
         })
       )
@@ -44,15 +44,15 @@ router.post(
 );
 
 router.post(
-  "/submitters",
+  '/submitters',
   authFilter,
   (req: Request, res: Response, next: NextFunction) => {
-    console.debug("Adding submitters");
+    console.debug('Adding submitters');
     addSubmittersToStudy(req.body)
       .then((result) =>
         res.json({
           success: true,
-          message: "User successfully added!",
+          message: 'User successfully added!',
           data: result,
         })
       )
@@ -61,20 +61,20 @@ router.post(
 );
 
 router.delete(
-  "/submitters",
+  '/submitters',
   authFilter,
   (req: Request, res: Response, next: NextFunction) => {
-    console.debug("Removing submitters");
+    console.debug('Removing submitters');
     const removeReq = {
-      sampleType: req.query.sampleType?.toString() || "",
-      studyId: req.query.studyId?.toString() || "",
-      submitter: req.query.submitter?.toString() || "",
+      sampleType: req.query.sampleType?.toString() || '',
+      studyId: req.query.studyId?.toString() || '',
+      submitter: req.query.submitter?.toString() || '',
     };
     removeSubmitterFromStudy(removeReq)
       .then((result) =>
         res.json({
           success: true,
-          message: "User successfully removed!",
+          message: 'User successfully removed!',
           data: result,
         })
       )

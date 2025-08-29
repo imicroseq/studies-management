@@ -1,10 +1,10 @@
-import urljoin from "url-join";
-import { env } from "../config";
-import { CreateStudyReq, SongStudy } from "../common/types";
+import urljoin from 'url-join';
+import { env } from '../config';
+import { CreateStudyReq, SongStudy } from '../common/types';
 
-import oauthClient from "../components/oauthClient";
-import { SampleTypeNotFound } from "../common/errors";
-import type { SongConfigSchema } from "../config/songConfig";
+import oauthClient from '../components/oauthClient';
+import { SampleTypeNotFound } from '../common/errors';
+import type { SongConfigSchema } from '../config/songConfig';
 const { get, postWithAuth } = oauthClient;
 
 const getSampleTypesFromConfig = () => {
@@ -25,13 +25,13 @@ const getSongUrlFromConfig = (sampleType: string) => {
 
 const getSongStudyUrl = (sampleType: string, studyId: string) => {
   const songUrl = getSongUrlFromConfig(sampleType);
-  return urljoin(songUrl, "/studies/", studyId);
+  return urljoin(songUrl, '/studies/', studyId);
 };
 
 const getSongAllStudiesUrl = (sampleType: string) => {
   const songUrl = getSongUrlFromConfig(sampleType);
 
-  return urljoin(songUrl, "/studies/all");
+  return urljoin(songUrl, '/studies/all');
 };
 
 export const getSongStudyIds = async (sampleType: string) => {
@@ -77,7 +77,7 @@ export const createSongStudy = async (req: CreateStudyReq) => {
   };
 
   // Note: Song create study URL requires trailing slash
-  const songStudyUrl = getSongStudyUrl(req.sampleType, req.studyId) + "/";
+  const songStudyUrl = getSongStudyUrl(req.sampleType, req.studyId) + '/';
 
   const songCreateStudyRes = await postWithAuth(
     songStudyUrl,

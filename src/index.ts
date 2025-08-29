@@ -1,19 +1,19 @@
 // dotenv should be first line executed
-require("dotenv").config();
+require('dotenv').config();
 
 import {
   ForbiddenError,
   UnauthorizedError,
-} from "@overture-stack/ego-token-middleware";
-import cors from "cors";
-import express, { NextFunction, Request, Response } from "express";
-import swaggerUi from "swagger-ui-express";
-import { ServiceError } from "./common/errors";
-import { GeneralErrorType } from "./common/types";
-import { env } from "./config";
-import swaggerDocument from "./resources/swagger-def.json";
-import studiesRouter from "./routes/studies";
-import type { SongConfigSchema } from "./config/songConfig";
+} from '@overture-stack/ego-token-middleware';
+import cors from 'cors';
+import express, { NextFunction, Request, Response } from 'express';
+import swaggerUi from 'swagger-ui-express';
+import { ServiceError } from './common/errors';
+import { GeneralErrorType } from './common/types';
+import { env } from './config';
+import swaggerDocument from './resources/swagger-def.json';
+import studiesRouter from './routes/studies';
+import type { SongConfigSchema } from './config/songConfig';
 
 // *** create and init app ***
 const app = express();
@@ -21,14 +21,14 @@ app.use(cors());
 app.use(express.json());
 
 // *** setup endpoints ***
-app.get("/", (_req: Request, res: Response) => {
-  res.send({ endpoints: { healthCheck: "/health", swaggerUi: "/api-docs" } });
+app.get('/', (_req: Request, res: Response) => {
+  res.send({ endpoints: { healthCheck: '/health', swaggerUi: '/api-docs' } });
 });
-app.get("/health", (_req: Request, res: Response) => {
+app.get('/health', (_req: Request, res: Response) => {
   res.send(true);
 });
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-app.use("/studies", studiesRouter);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use('/studies', studiesRouter);
 
 // *** define error handler ***
 app.use(function (
@@ -60,7 +60,7 @@ app.use(function (
     res.status(500).send({
       success: false,
       error: {
-        message: "Internal Server Error! Reason is unknown!",
+        message: 'Internal Server Error! Reason is unknown!',
         type: GeneralErrorType.UNKNOWN,
       },
     });
@@ -69,7 +69,7 @@ app.use(function (
 
 // *** listen on port ***
 app.listen(env.SERVER_PORT, () => {
-  console.log("================ Server Startup ================");
+  console.log('================ Server Startup ================');
   console.log(
     `📡 Listening on            : http://localhost:${env.SERVER_PORT}`
   );
@@ -82,5 +82,5 @@ app.listen(env.SERVER_PORT, () => {
         `${config.SONG_URL} (${config.SONG_SAMPLE_TYPE})`
     )}`
   );
-  console.log("===============================================");
+  console.log('===============================================');
 });
